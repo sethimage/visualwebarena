@@ -90,7 +90,14 @@ gcloud auth login
 gcloud config set project <your_project_name>
 ```
 
-6. Launch the evaluation. For example, to reproduce our GPT-3.5 captioning baseline:
+6. Download for NLTK
+
+```python
+import nltk
+nltk.download('punkt')
+```
+
+8. Launch the evaluation. For example, to reproduce our GPT-3.5 captioning baseline:
 ```bash
 python run.py \
   --instruction_path agent/prompts/jsons/p_cot_id_actree_3s.json \
