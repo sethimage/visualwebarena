@@ -103,12 +103,12 @@ python run.py \
   --instruction_path agent/prompts/jsons/p_cot_id_actree_3s.json \
   --test_start_idx 0 \
   --test_end_idx 1 \
-  --result_dir quick_start \
+  --result_dir gpt3.5_captioning \
   --test_config_base_dir=config_files/test_classifieds \
   --model gpt-3.5-turbo-1106 \
   --observation_type accessibility_tree_with_captioner
 ```
-This script will run the first Classifieds example with the GPT-3.5 caption-augmented agent. The trajectory will be saved in `quick_start/0.html`. Note that the baselines that include a captioning model run on GPU by default (e.g., BLIP-2-T5XL as the captioning model will take up approximately 12GB of GPU VRAM).
+This script will run the first Classifieds example with the GPT-3.5 caption-augmented agent. The trajectory will be saved in `gpt3.5_captioning/0.html`. Note that the baselines that include a captioning model run on GPU by default (e.g., BLIP-2-T5XL as the captioning model will take up approximately 12GB of GPU VRAM).
 
 ## GPT-4V + SoM Agent
 ![SoM](media/som_figure.png)
@@ -119,7 +119,7 @@ python run.py \
   --instruction_path agent/prompts/jsons/p_som_cot_id_actree_3s.json \
   --test_start_idx 0 \
   --test_end_idx 1 \
-  --result_dir <your_result_dir> \
+  --result_dir gpt4_som \
   --test_config_base_dir=config_files/test_classifieds \
   --model gpt-4-vision-preview \
   --action_set_tag som  --observation_type image_som
@@ -132,7 +132,7 @@ python run.py \
   --test_start_idx 0 \
   --test_end_idx 1 \
   --max_steps 1 \
-  --result_dir <your_result_dir> \
+  --result_dir gemini \
   --test_config_base_dir=config_files/test_classifieds \
   --provider google  --model gemini --mode completion  --max_obs_length 15360 \
   --action_set_tag som  --observation_type image_som
