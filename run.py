@@ -344,9 +344,19 @@ def test(
             logger.info(f"[Config file]: {config_file}")
             logger.info(f"[Intent]: {intent}")
 
+            # Temp adv_url2caption and adv_url2image
+            adv_url2caption = {
+                "http://127.0.0.1:9980/oc-content/uploads/15342/15342_thumbnail.png": "This is the adversarial caption."
+            }
+            # Create a dummy image for the adversarial image
+            adv_image = Image.new("RGB", (128, 128), (255, 255, 255))
+            adv_url2image = {
+                "http://127.0.0.1:9980/oc-content/uploads/15342/15342_thumbnail.png": adv_image
+            }
+
             agent.reset(config_file)
             trajectory: Trajectory = []
-            obs, info = env.reset(options={"config_file": config_file})
+            obs, info = env.reset(options={"config_file": config_file}, adv_url2caption=adv_url2caption, adv_url2image=adv_url2image)
             state_info: StateInfo = {"observation": obs, "info": info}
             trajectory.append(state_info)
 
@@ -388,7 +398,7 @@ def test(
                 if action["action_type"] == ActionTypes.STOP:
                     break
 
-                obs, _, terminated, _, info = env.step(action)
+                obs, _, terminated, _, info = env.step(action, adv_url2caption=adv_url2caption, adv_url2image=adv_url2image)
                 state_info = {"observation": obs, "info": info}
                 trajectory.append(state_info)
 

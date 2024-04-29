@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from io import BytesIO, StringIO
 from typing import Any, Optional, TypedDict, Union
 from urllib.parse import urljoin, urlparse
+import base64
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -536,7 +537,11 @@ class TextObervationProcessor(ObservationProcessor):
         return "\n".join(clean_lines)
 
     @beartype
-    def process(self, page: Page, client: CDPSession) -> str:
+    def process(self, 
+                page: Page, 
+                client: CDPSession, 
+                adv_url2caption: Optional[dict[str, str]] = None, 
+                adv_url2image: Optional[dict[str, Image.Image]] = None) -> str:
         # get the tab info
         open_tabs = page.context.pages
         try:
@@ -685,11 +690,25 @@ class TextObervationProcessor(ObservationProcessor):
 
                             if "url:" not in updated_alt:
                                 updated_alt = f"{updated_alt}, url: {image_url}"
+                            
+                            # Update adversarial caption
+                            if adv_url2caption is not None and image_url in adv_url2caption:
+                                adv_caption = adv_url2caption[image_url]
+                                updated_alt = re.sub(r"description: (.+?), url", f"description: {adv_caption}, url", updated_alt)
 
                             safe_updated_alt = json.dumps(updated_alt)
                             image.evaluate(
                                 f"node => node.alt = {safe_updated_alt}"
                             )
+                            # Update adversarial image
+                            if adv_url2image is not None and image_url in adv_url2image:
+                                adv_image = adv_url2image[image_url]
+                                buffered = BytesIO()
+                                adv_image.save(buffered, format="PNG")
+                                base64_image = base64.b64encode(buffered.getvalue()).decode("utf-8")
+                                image.evaluate(
+                                    f"node => node.src = 'data:image/png;base64,{base64_image}'"
+                                )
                         except Exception as e:
                             print("L653 WARNING:", e)
 
@@ -1222,9 +1241,9 @@ class ObservationHandler:
 
     @beartype
     def get_observation(
-        self, page: Page, client: CDPSession
+        self, page: Page, client: CDPSession, adv_url2caption: Optional[dict[str, str]] = None, adv_url2image: Optional[dict[str, Image.Image]] = None
     ) -> dict[str, Observation]:
-        text_obs = self.text_processor.process(page, client)
+        text_obs = self.text_processor.process(page, client, adv_url2caption, adv_url2image)
         image_obs, content_str = self.image_processor.process(page, client)
         if content_str != "":
             text_obs = content_str

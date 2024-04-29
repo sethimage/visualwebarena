@@ -221,9 +221,9 @@ class ScriptBrowserEnv(Env[dict[str, Observation], Action]):
         return page.client  # type: ignore
 
     @beartype
-    def _get_obs(self) -> dict[str, Observation]:
+    def _get_obs(self, adv_url2caption=None, adv_url2image=None) -> dict[str, Observation]:
         obs = self.observation_handler.get_observation(
-            self.page, self.get_page_client(self.page)
+            self.page, self.get_page_client(self.page), adv_url2caption, adv_url2image
         )
         return obs
 
@@ -238,6 +238,8 @@ class ScriptBrowserEnv(Env[dict[str, Observation], Action]):
         *,
         seed: int | None = None,
         options: dict[str, str] | None = None,
+        adv_url2caption=None, 
+        adv_url2image=None
     ) -> tuple[dict[str, Observation], dict[str, Any]]:
         """
         Reset the environment.
@@ -261,7 +263,7 @@ class ScriptBrowserEnv(Env[dict[str, Observation], Action]):
         if self.sleep_after_execution > 0:
             time.sleep(self.sleep_after_execution)
 
-        observation = self._get_obs()
+        observation = self._get_obs(adv_url2caption, adv_url2image)
         observation_metadata = self._get_obs_metadata()
         info = {
             "page": DetachedPage(self.page.url, ""),
@@ -282,7 +284,9 @@ class ScriptBrowserEnv(Env[dict[str, Observation], Action]):
             self.context_manager.__exit__()
 
     def step(
-        self, action: Action
+        self, action: Action, 
+        adv_url2caption=None, 
+        adv_url2image=None
     ) -> tuple[dict[str, Observation], float, bool, bool, dict[str, Any]]:
         if not self.reset_finished:
             raise RuntimeError("Call reset first before calling step.")
@@ -304,7 +308,7 @@ class ScriptBrowserEnv(Env[dict[str, Observation], Action]):
         if self.sleep_after_execution > 0:
             time.sleep(self.sleep_after_execution)
 
-        observation = self._get_obs()
+        observation = self._get_obs(adv_url2caption, adv_url2image)
         observation_metadata = self._get_obs_metadata()
 
         info = {

@@ -142,3 +142,9 @@ config_files/test_shopping
 config_files/test_classifieds.json
 config_files/test_reddit.json
 config_files/test_shopping.json
+
+classifieds_docker_compose/*
+classifieds_docker_compose.zip
+postmill-populated-exposed-withimg.tar
+shopping_final_0712.tar
+gpt4_som/*
