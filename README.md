@@ -47,12 +47,12 @@ Please check out [this page](environment_docker/README.md) for details.
 
 2. Configurate the urls for each website.
 ```bash
-export CLASSIFIEDS="<your_classifieds_domain>:9980"
+export CLASSIFIEDS="http://127.0.0.1:9980"
 export CLASSIFIEDS_RESET_TOKEN="4b61655535e7ed388f0d40a93600254c"  # Default reset token for classifieds site, change if you edited its docker-compose.yml
-export SHOPPING="<your_shopping_site_domain>:7770"
-export REDDIT="<your_reddit_domain>:9999"
-export WIKIPEDIA="<your_wikipedia_domain>:8888"
-export HOMEPAGE="<your_homepage_domain>:4399"
+export SHOPPING="http://127.0.0.1:7770"
+export REDDIT="http://127.0.0.1:9999"
+export WIKIPEDIA="http://127.0.0.1:8888"
+export HOMEPAGE="http://127.0.0.1:4399"
 ```
 
 In addition, if you want to run on the original WebArena tasks, make sure to also set up the [CMS](https://github.com/web-arena-x/webarena/blob/main/environment_docker/README.md#e-commerce-content-management-system-cms), [GitLab](https://github.com/web-arena-x/webarena/blob/main/environment_docker/README.md#gitlab-website), and [map](https://github.com/web-arena-x/webarena/blob/main/environment_docker/README.md#map) environments, and then set their respective environment variables:

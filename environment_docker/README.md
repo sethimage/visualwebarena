@@ -8,7 +8,7 @@ Download the image zip from https://drive.google.com/file/d/1m79lp84yXfqdTBHr6IS
 ```
 unzip classifieds_docker_compose.zip
 cd classifieds_docker_compose
-vi docker-compose.yml  # Set CLASSIFIEDS to your site url `http://<your-server-hostname>:9980/`, and change the reset token if required
+vi docker-compose.yml  # Set CLASSIFIEDS to your site url `http://127.0.0.1:9980/`, and change the reset token if required
 sudo docker compose up --build -d
 # Wait for compose up to finish. This may take a while on the first launch as it downloads several large images from dockerhub.
 sudo docker exec classifieds_db mysql -u root -ppassword osclass -e 'source docker-entrypoint-initdb.d/osclass_craigslist.sql'  # Populate DB with content
