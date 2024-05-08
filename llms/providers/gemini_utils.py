@@ -11,9 +11,11 @@ from vertexai.preview.generative_models import (
     HarmCategory,
     Image,
 )
+import vertexai
 
-model = GenerativeModel("gemini-pro-vision")
-
+vertexai.init(project="gemini-422704")
+# model = GenerativeModel("gemini-pro-vision")
+model = GenerativeModel("gemini-1.5-pro-preview-0409")
 
 def retry_with_exponential_backoff(  # type: ignore
     func,
