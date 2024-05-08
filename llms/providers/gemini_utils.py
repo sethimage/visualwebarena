@@ -11,11 +11,7 @@ from vertexai.preview.generative_models import (
     HarmCategory,
     Image,
 )
-import vertexai
 
-vertexai.init(project="gemini-422704")
-# model = GenerativeModel("gemini-pro-vision")
-model = GenerativeModel("gemini-1.5-pro-preview-0409")
 
 def retry_with_exponential_backoff(  # type: ignore
     func,
@@ -70,7 +66,6 @@ def generate_from_gemini_completion(
     max_tokens: int,
     top_p: float,
 ) -> str:
-    del engine
     safety_config = {
         HarmCategory.HARM_CATEGORY_UNSPECIFIED: HarmBlockThreshold.BLOCK_ONLY_HIGH,
         HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_ONLY_HIGH,
@@ -78,6 +73,8 @@ def generate_from_gemini_completion(
         HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
         HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
     }
+    # model = GenerativeModel("gemini-pro-vision")
+    model = GenerativeModel(engine)
     response = model.generate_content(
         prompt,
         generation_config=dict(
