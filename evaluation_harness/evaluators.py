@@ -169,13 +169,7 @@ class StringEvaluator(Evaluator):
     def must_include(ref: str, pred: str) -> float:
         clean_ref = StringEvaluator.clean_answer(ref)
         clean_pred = StringEvaluator.clean_answer(pred)
-        # tokenize the answer if the ref is a single word
-        # prevent false positive (e.g, 0)
-        if len(word_tokenize(clean_ref)) == 1:
-            tok_pred = word_tokenize(clean_pred)
-            return float(clean_ref in tok_pred)
-        else:
-            return float(clean_ref in clean_pred)
+        return float(clean_ref in clean_pred)
 
     @staticmethod
     @beartype
@@ -219,6 +213,9 @@ class StringEvaluator(Evaluator):
             match approach:
                 case "exact_match":
                     score *= self.exact_match(ref=value, pred=pred)
+                case "not_exact_match":
+                    exact = self.exact_match(ref=value, pred=pred)
+                    score *= 1 - exact
                 case "required_values":
                     required_values = value
                     assert isinstance(required_values, list)
@@ -240,8 +237,14 @@ class StringEvaluator(Evaluator):
                     assert isinstance(value, list)
                     for must_value in value:
                         value_or = must_value.split(" |OR| ")
-                        for v in value_or:
-                            score *= self.must_include(ref=v, pred=pred)
+                        score *= any(
+                            [
+                                self.must_include(ref=v, pred=pred)
+                                for v in value_or
+                            ]
+                        )
+                        # for v in value_or:
+                        #     score *= self.must_include(ref=v, pred=pred)
                 case "must_exclude":
                     assert isinstance(value, list)
                     for must_excl_value in value:
@@ -437,6 +440,8 @@ class HTMLContentExactEvaluator(Evaluator):
                 assert isinstance(required_contents, list)
                 for content in required_contents:
                     assert " |OR| " not in content
+                    # print("Content: ", content)
+                    # print("Selected element: ", selected_element)
                     score *= StringEvaluator.must_exclude(
                         content, pred=selected_element
                     )

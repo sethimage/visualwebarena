@@ -633,6 +633,8 @@ class TextObervationProcessor(ObservationProcessor):
                         for url in image_urls:
                             if "data:image/svg" in url:
                                 continue
+                            if "data:image/png;base64" in url:
+                                continue
                             else:
                                 try:
                                     image = Image.open(
@@ -683,7 +685,7 @@ class TextObervationProcessor(ObservationProcessor):
                             if image_url in self.url2caption:
                                 if self.url2caption[image_url] not in updated_alt:
                                     updated_alt = f"{updated_alt}, description: {self.url2caption[image_url]}"
-                            elif "data:image/svg" not in image_url:
+                            elif ("data:image/svg" not in image_url) and ("data:image/png;base64" not in image_url):
                                 print(
                                     f"WARNING: {image_url} not in self.url2caption"
                                 )
@@ -709,6 +711,7 @@ class TextObervationProcessor(ObservationProcessor):
                                 image.evaluate(
                                     f"node => node.src = 'data:image/png;base64,{base64_image}'"
                                 )
+                                
                         except Exception as e:
                             print("L653 WARNING:", e)
 
