@@ -714,6 +714,24 @@ class TextObervationProcessor(ObservationProcessor):
                                 
                         except Exception as e:
                             print("L653 WARNING:", e)
+                
+                else:
+                    # Update adversarial image
+                    if adv_url2image is not None:
+                        images = page.query_selector_all("img")
+                        for image in images:
+                            try:
+                                image_url = image.get_attribute("src")
+                                if image_url in adv_url2image:
+                                    adv_image = adv_url2image[image_url]
+                                    buffered = BytesIO()
+                                    adv_image.save(buffered, format="PNG")
+                                    base64_image = base64.b64encode(buffered.getvalue()).decode("utf-8")
+                                    image.evaluate(
+                                        f"node => node.src = 'data:image/png;base64,{base64_image}'"
+                                    )
+                            except Exception as e:
+                                print("L669 WARNING:", e)
 
                 if (
                     self.observation_type
