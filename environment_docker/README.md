@@ -49,7 +49,7 @@ Now you can visit `http://127.0.0.1:7770`.
 ## Social Forum Website (Reddit)
 
 The Wikipedia Website follows the same setup procedure as the environment used in WebArena. Download the image tar from:
-- https://drive.google.com/file/d/17Qpp1iu_mPqzgO_73Z9BnFjHrzmX9DGf/view?usp=sharing
+https://drive.google.com/file/d/17Qpp1iu_mPqzgO_73Z9BnFjHrzmX9DGf/view?usp=sharing
 
 ```
 sudo docker load --input postmill-populated-exposed-withimg.tar
@@ -61,7 +61,7 @@ Now you can visit `http://127.0.0.1:9999/`.
 ## Wikipedia Website
 
 The Wikipedia Website follows the same setup procedure as the environment used in WebArena. Download the data from:
-- https://drive.google.com/file/d/1Um4QLxi_bGv5bP6kt83Ke0lNjuV9Tm0P/view?usp=sharing
+https://drive.google.com/file/d/1Um4QLxi_bGv5bP6kt83Ke0lNjuV9Tm0P/view?usp=sharing
 
 ```
 docker run -d --name=wikipedia --volume=<your-path-to-downloaded-folder>/:/data -p 8888:80 ghcr.io/kiwix/kiwix-serve:3.3.0 wikipedia_en_all_maxi_2022-05.zim
