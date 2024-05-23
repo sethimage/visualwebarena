@@ -19,7 +19,7 @@ Now you can visit `http://127.0.0.1:9980`.
 ## Shopping Website (OneStopShop)
 
 The Shopping Website follows the same setup as the same environment used in WebArena. Download the image tar from:
-- https://drive.google.com/file/d/1gxXalk9O0p9eu1YkIJcmZta1nvvyAJpA/view?usp=sharing
+https://drive.google.com/file/d/1gxXalk9O0p9eu1YkIJcmZta1nvvyAJpA/view?usp=sharing
 
 ```
 sudo docker load --input shopping_final_0712.tar
@@ -56,37 +56,3 @@ sudo docker load --input postmill-populated-exposed-withimg.tar
 sudo docker run --name forum -p 9999:80 -d postmill-populated-exposed-withimg
 ```
 Now you can visit `http://127.0.0.1:9999/`.
-
-
-## Wikipedia Website
-
-The Wikipedia Website follows the same setup procedure as the environment used in WebArena. Download the data from:
-https://drive.google.com/file/d/1Um4QLxi_bGv5bP6kt83Ke0lNjuV9Tm0P/view?usp=sharing
-
-```
-docker run -d --name=wikipedia --volume=<your-path-to-downloaded-folder>/:/data -p 8888:80 ghcr.io/kiwix/kiwix-serve:3.3.0 wikipedia_en_all_maxi_2022-05.zim
-```
-Now you can visit `http://<your-server-hostname>:8888/wikipedia_en_all_maxi_2022-05/A/User:The_other_Kiwix_guy/Landing`.
-
-
-## Homepage
-
-The homepage lists all available websites which the agent can use to navigate to different sites.
-![Homepage](../media/homepage_demo.png)
-
-To host the homepage, first change `<your-server-hostname>` to the corresponding server hostnames in [webarena-homepage/templates/index.html](webarena-homepage/templates/index.html)
-```bash
-# Define your actual server hostname
-YOUR_ACTUAL_HOSTNAME=""
-# Remove trailing / if it exists
-YOUR_ACTUAL_HOSTNAME=${YOUR_ACTUAL_HOSTNAME%/}
-# Use sed to replace placeholder in the HTML file
-perl -pi -e "s|<your-server-hostname>|${YOUR_ACTUAL_HOSTNAME}|g" webarena-homepage/templates/index.html
-```
-
-Then run
-```
-cd webarena_homepage
-flask run --host=0.0.0.0 --port=4399
-```
-The homepage will be available at `http://<your-server-hostname>:4399`.
