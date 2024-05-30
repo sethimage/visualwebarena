@@ -206,7 +206,7 @@ class StringEvaluator(Evaluator):
             configs = json.load(f)
 
         last_action = self.get_last_action(trajectory)
-        pred = self.clean_answer(last_action["answer"])
+        pred = self.clean_answer(last_action.get("answer", ""))
 
         score = 1.0
         for approach, value in configs["eval"]["reference_answers"].items():
