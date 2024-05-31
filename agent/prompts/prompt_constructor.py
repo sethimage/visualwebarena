@@ -360,6 +360,8 @@ class MultimodalCoTPromptConstructor(CoTPromptConstructor):
                             ],
                         }
                     )
+                    if "gpt-4o" in self.lm_config.model:  # FIXME: this is a hack to suppress image examples in the system prompt (since it's not supported by GPT-4o)
+                        message[-1]["content"] = message[-1]["content"][:-2]
                     message.append(
                         {
                             "role": "system",
