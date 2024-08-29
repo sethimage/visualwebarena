@@ -249,6 +249,7 @@ def generate_from_openai_chat_completion(
     top_p: float,
     context_length: int,
     stop_token: str | None = None,
+    num_outputs: int = 1,
 ) -> str:
     if "OPENAI_API_KEY" not in os.environ:
         raise ValueError(
@@ -260,8 +261,12 @@ def generate_from_openai_chat_completion(
         temperature=temperature,
         max_tokens=max_tokens,
         top_p=top_p,
+        n=num_outputs
     )
-    answer: str = response.choices[0].message.content
+    if num_outputs > 1:
+        answer: list[str] = [x.message.content for x in response.choices]
+    else:
+        answer: str = response.choices[0].message.content
     return answer
 
 

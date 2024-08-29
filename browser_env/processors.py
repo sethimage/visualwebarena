@@ -639,7 +639,7 @@ class TextObervationProcessor(ObservationProcessor):
                                 try:
                                     image = Image.open(
                                         requests.get(url, stream=True).raw
-                                    )
+                                    ).convert('RGB')
                                     image_pixels.append(image)
                                     valid_urls.append(url)
                                 except Exception as e:

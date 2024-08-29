@@ -315,6 +315,330 @@ class MultimodalCoTPromptConstructor(CoTPromptConstructor):
         )
 
         assert all([f"{{k}}" not in current for k in keywords])
+        
+        prompt = self.get_lm_api_input(
+            intro, examples, current, page_screenshot_img, images
+        )
+        return prompt
+
+    def get_lm_api_input(
+        self,
+        intro: str,
+        examples: list[tuple[str, str, str]],
+        current: str,
+        page_screenshot_img: Image.Image,
+        images: list[Image.Image],
+    ) -> APIInput:
+        """Return the require format for an API"""
+        message: list[dict[str, str]] | str | list[str | Image.Image]
+        if "openai" in self.lm_config.provider:
+            if self.lm_config.mode == "chat":
+                message = [
+                    {
+                        "role": "system",
+                        "content": [{"type": "text", "text": intro}],
+                    }
+                ]
+                for (x, y, z) in examples:
+                    example_img = Image.open(z)
+                    message.append(
+                        {
+                            "role": "system",
+                            "name": "example_user",
+                            "content": [
+                                {"type": "text", "text": x},
+                                {
+                                    "type": "text",
+                                    "text": "IMAGES: (1) current page screenshot",
+                                },
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": pil_to_b64(example_img)
+                                    },
+                                },
+                            ],
+                        }
+                    )
+                    if "gpt-4o" in self.lm_config.model:  # FIXME: this is a hack to suppress image examples in the system prompt (since it's not supported by GPT-4o)
+                        message[-1]["content"] = message[-1]["content"][:-2]
+                    message.append(
+                        {
+                            "role": "system",
+                            "name": "example_assistant",
+                            "content": [{"type": "text", "text": y}],
+                        }
+                    )
+
+                # Encode images and page_screenshot_img as base64 strings.
+                current_prompt = current
+                content = [
+                    {
+                        "type": "text",
+                        "text": "IMAGES: (1) current page screenshot",
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": pil_to_b64(page_screenshot_img)},
+                    },
+                ]
+                for image_i, image in enumerate(images):
+                    content.extend(
+                        [
+                            {
+                                "type": "text",
+                                "text": f"({image_i+2}) input image {image_i+1}",
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": pil_to_b64(image)},
+                            },
+                        ]
+                    )
+                content = [{"type": "text", "text": current_prompt}] + content
+
+                message.append({"role": "user", "content": content})
+                return message
+            else:
+                raise ValueError(
+                    f"GPT-4V models do not support mode {self.lm_config.mode}"
+                )
+        elif "anthropic" in self.lm_config.provider:
+            if self.lm_config.mode == "chat":
+                message = [
+                    # {
+                    #     "role": "system",
+                    #     "content": [{"type": "text", "text": intro}],
+                    # }
+                    intro
+                ]
+                for (x, y, z) in examples:
+                    example_img = Image.open(z)
+                    message.append(
+                        {
+                            # "role": "system",
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": x},
+                                {
+                                    "type": "text",
+                                    "text": "IMAGES: (1) current page screenshot",
+                                },
+                                {
+                                    "type": "image",
+                                    "source": {
+                                        "type": "base64",
+                                        "media_type": "image/png",
+                                        "data": pil_to_b64(example_img, add_prefix=False),
+                                    },
+                                },
+                            ],
+                        }
+                    )
+                    message.append(
+                        {
+                            "role": "assistant",
+                            "content": [{"type": "text", "text": y}],
+                        }
+                    )
+
+                # Encode images and page_screenshot_img as base64 strings.
+                current_prompt = current
+                content = [
+                    {
+                        "type": "text",
+                        "text": "IMAGES: (1) current page screenshot",
+                    },
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/png",
+                            "data": pil_to_b64(page_screenshot_img, add_prefix=False),
+                        },
+                    },
+                ]
+                for image_i, image in enumerate(images):
+                    content.extend(
+                        [
+                            {
+                                "type": "text",
+                                "text": f"({image_i+2}) input image {image_i+1}",
+                            },
+                            {
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": "image/png",
+                                    "data": pil_to_b64(image, add_prefix=False),
+                                },
+                            },
+                        ]
+                    )
+                content = [{"type": "text", "text": current_prompt}] + content
+
+                message.append({"role": "user", "content": content})
+                return message
+            else:
+                raise ValueError(
+                    f"Anthropic models do not support mode {self.lm_config.mode}"
+                )
+        elif "google" in self.lm_config.provider:
+            if self.lm_config.mode == "completion":
+                message = [
+                    intro,
+                    "Here are a few examples:",
+                ]
+                for (x, y, z) in examples:
+                    example_img = Image.open(z)
+                    message.append(f"Observation\n:{x}\n")
+                    message.extend(
+                        [
+                            "IMAGES:",
+                            "(1) current page screenshot:",
+                            pil_to_vertex(example_img),
+                        ]
+                    )
+                    message.append(f"Action: {y}")
+                message.append("Now make prediction given the observation")
+                message.append(f"Observation\n:{current}\n")
+                message.extend(
+                    [
+                        "IMAGES:",
+                        "(1) current page screenshot:",
+                        pil_to_vertex(page_screenshot_img),
+                    ]
+                )
+                for image_i, image in enumerate(images):
+                    message.extend(
+                        [
+                            f"({image_i+2}) input image {image_i+1}",
+                            pil_to_vertex(image),
+                        ]
+                    )
+                message.append("Action:")
+                return message
+            else:
+                raise ValueError(
+                    f"Gemini models do not support mode {self.lm_config.mode}"
+                )
+        else:
+            raise NotImplementedError(
+                f"Provider {self.lm_config.provider} not implemented"
+            )
+
+
+
+class ReflexionPromptConstructor(CoTPromptConstructor):
+    """The agent will perform step-by-step reasoning before the answer, with reflexion"""
+
+    def __init__(
+        self,
+        instruction_path: str | Path,
+        lm_config: lm_config.LMConfig,
+        tokenizer: Tokenizer,
+    ):
+        super().__init__(instruction_path, lm_config, tokenizer)
+        self.answer_phrase = self.instruction["meta_data"]["answer_phrase"]
+
+    def construct(
+        self,
+        trajectory: Trajectory,
+        intent: str,
+        meta_data: dict[str, Any] = {},
+    ) -> APIInput:
+        intro = self.instruction["intro"]
+        examples = self.instruction["examples"]
+        template = self.instruction["template"]
+        keywords = self.instruction["meta_data"]["keywords"]
+        state_info: StateInfo = trajectory[-1]  # type: ignore[assignment]
+
+        obs = state_info["observation"][self.obs_modality]
+        max_obs_length = self.lm_config.gen_config["max_obs_length"]
+        if max_obs_length:
+            obs = self.tokenizer.decode(self.tokenizer.encode(obs)[:max_obs_length])  # type: ignore[arg-type]
+
+        page = state_info["info"]["page"]
+        url = page.url
+        previous_action_str = meta_data["action_history"][-1]
+        memory = ""
+        if "memory" in meta_data:
+            memory = "\n" + "\n".join(meta_data["memory"])
+        current = template.format(
+            objective=intent,
+            url=self.map_url_to_real(url),
+            observation=obs,
+            previous_action=previous_action_str,
+            memory=memory,
+        )
+        assert all([f"{{k}}" not in current for k in keywords])
+
+        prompt = self.get_lm_api_input(intro, examples, current)
+        return prompt
+
+    def _extract_action(self, response: str) -> str:
+        # find the first occurence of action
+        action_splitter = self.instruction["meta_data"]["action_splitter"]
+        pattern = rf"{action_splitter}((.|\n)*?){action_splitter}"
+        match = re.search(pattern, response)
+        if match:
+            return match.group(1).strip()
+        else:
+            raise ActionParsingError(
+                f'Cannot find the answer phrase "{self.answer_phrase}" in "{response}"'
+            )
+
+
+class MultimodalReflexionCoTPromptConstructor(CoTPromptConstructor):
+    """The agent will perform step-by-step reasoning before the answer, with reflexion"""
+
+    def __init__(
+        self,
+        instruction_path: str | Path,
+        lm_config: lm_config.LMConfig,
+        tokenizer: Tokenizer,
+    ):
+        super().__init__(instruction_path, lm_config, tokenizer)
+        self.answer_phrase = self.instruction["meta_data"]["answer_phrase"]
+
+    def construct(
+        self,
+        trajectory: Trajectory,
+        intent: str,
+        page_screenshot_img: Image.Image,
+        images: list[Image.Image],
+        meta_data: dict[str, Any] = {},
+    ) -> APIInput:
+        intro = self.instruction["intro"]
+        examples = self.instruction["examples"]
+        template = self.instruction["template"]
+        keywords = self.instruction["meta_data"]["keywords"]
+        state_info: StateInfo = trajectory[-1]  # type: ignore[assignment]
+
+        obs = state_info["observation"][self.obs_modality]
+        max_obs_length = self.lm_config.gen_config["max_obs_length"]
+        if max_obs_length:
+            if self.lm_config.provider == "google":
+                print("NOTE: This is a Gemini model, so we use characters instead of tokens for max_obs_length.")
+                obs = obs[:max_obs_length]
+            else:
+                obs = self.tokenizer.decode(self.tokenizer.encode(obs)[:max_obs_length])  # type: ignore[arg-type]
+
+        page = state_info["info"]["page"]
+        url = page.url
+        previous_action_str = meta_data["action_history"][-1]
+        memory = ""
+        if "memory" in meta_data:
+            memory = "\n" + "\n".join(meta_data["memory"])
+        current = template.format(
+            objective=intent,
+            url=self.map_url_to_real(url),
+            observation=obs,
+            previous_action=previous_action_str,
+            memory=memory,
+        )
+
+        assert all([f"{{k}}" not in current for k in keywords])
 
         prompt = self.get_lm_api_input(
             intro, examples, current, page_screenshot_img, images
@@ -526,3 +850,52 @@ class MultimodalCoTPromptConstructor(CoTPromptConstructor):
             raise NotImplementedError(
                 f"Provider {self.lm_config.provider} not implemented"
             )
+        
+
+class ReflectionGenerationPromptConstructor(CoTPromptConstructor):
+    """Conditioned on the trajectory, the agent will generate the reflection"""
+
+    def __init__(
+        self,
+        instruction_path: str | Path,
+        lm_config: lm_config.LMConfig,
+        tokenizer: Tokenizer,
+    ):
+        super().__init__(instruction_path, lm_config, tokenizer)
+
+    def construct(self, records: dict[str, Any]) -> APIInput:
+        intro = self.instruction["intro"]
+        examples = self.instruction["examples"]
+        template = self.instruction["template"]
+        keywords = self.instruction["meta_data"]["keywords"]
+
+        obs_and_action = ""
+        for idx, step in enumerate(records["steps"]):
+            obs = step["accessibility_tree"] # TODO: support other obs_modality
+            max_obs_length = self.lm_config.gen_config["max_obs_length"]
+            if max_obs_length:
+                obs = self.tokenizer.decode(self.tokenizer.encode(obs)[:max_obs_length]) # type: ignore[arg-type]
+            url = step["url"]
+            action_str = step["other"]["raw_action"]
+            obs_and_action += f"OBSERVATION {idx}:\nURL: {url}\n{obs}\n\n"
+            obs_and_action += f"ACTION {idx}:\n{action_str}\n\n"
+
+        if not records.get("memory", []):
+            memory = "none"
+        else:
+            memory = "\n"
+            for trail_idx, reflection in enumerate(records["memory"]):
+                memory += f"TRIAL {trail_idx}:\n{reflection}\n"
+        
+        status = records["status"]
+        current = template.format(
+            objective=records["intent"],
+            trajectory=obs_and_action,
+            status=status,
+            memory=memory,
+        )
+        assert all([f"{{k}}" not in current for k in keywords])
+        # breakpoint()
+
+        prompt = self.get_lm_api_input(intro, examples, current)
+        return prompt

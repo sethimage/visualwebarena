@@ -117,13 +117,44 @@ def renew_comb(comb: list[str], auth_folder: str = "./.auth") -> None:
 
     context_manager.__exit__()
 
+def get_site_comb_from_filepath(file_path: str) -> list[str]:
+    comb = os.path.basename(file_path).rsplit("_", 1)[0].split(".")
+    return comb
+
+
+# def main(auth_folder: str = "./.auth") -> None:
+#     pairs = list(combinations(SITES, 2))
+
+#     with ThreadPoolExecutor(max_workers=8) as executor:
+#         for pair in pairs:
+#             # Auth doesn't work on this pair as they share the same cookie
+#             if "reddit" in pair and (
+#                 "shopping" in pair or "shopping_admin" in pair
+#             ):
+#                 continue
+#             executor.submit(
+#                 renew_comb, list(sorted(pair)), auth_folder=auth_folder
+#             )
+
+#         for site in SITES:
+#             executor.submit(renew_comb, [site], auth_folder=auth_folder)
+
+#     for c_file in glob.glob(f"{auth_folder}/*.json"):
+#         comb = c_file.split("/")[-1].rsplit("_", 1)[0].split(".")
+#         for cur_site in comb:
+#             url = URLS[SITES.index(cur_site)]
+#             keyword = KEYWORDS[SITES.index(cur_site)]
+#             match = EXACT_MATCH[SITES.index(cur_site)]
+#             print(c_file, url, keyword, match)
+#             assert not is_expired(Path(c_file), url, keyword, match), url
 
 def main(auth_folder: str = "./.auth") -> None:
     pairs = list(combinations(SITES, 2))
 
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    max_workers = 8
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
         for pair in pairs:
-            # Auth doesn't work on this pair as they share the same cookie
+            # TODO[shuyanzh] auth don't work on these two sites
             if "reddit" in pair and (
                 "shopping" in pair or "shopping_admin" in pair
             ):
@@ -135,15 +166,36 @@ def main(auth_folder: str = "./.auth") -> None:
         for site in SITES:
             executor.submit(renew_comb, [site], auth_folder=auth_folder)
 
-    for c_file in glob.glob(f"{auth_folder}/*.json"):
-        comb = c_file.split("/")[-1].rsplit("_", 1)[0].split(".")
-        for cur_site in comb:
-            url = URLS[SITES.index(cur_site)]
-            keyword = KEYWORDS[SITES.index(cur_site)]
-            match = EXACT_MATCH[SITES.index(cur_site)]
-            print(c_file, url, keyword, match)
-            assert not is_expired(Path(c_file), url, keyword, match), url
+    futures = []
 
+    cookie_files = list(glob.glob(f"{auth_folder}/*.json"))
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        for c_file in cookie_files:
+            comb = get_site_comb_from_filepath(c_file)
+            for cur_site in comb:
+                url = URLS[SITES.index(cur_site)]
+                keyword = KEYWORDS[SITES.index(cur_site)]
+                match = EXACT_MATCH[SITES.index(cur_site)]
+                future = executor.submit(
+                    is_expired, Path(c_file), url, keyword, match
+                )
+                futures.append(future)
+
+    for i, future in enumerate(futures):
+        assert not future.result(), f"Cookie {cookie_files[i]} expired."
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--site_list", nargs="+", default=[])
+    parser.add_argument("--auth_folder", type=str, default="./.auth")
+    args = parser.parse_args()
+    if not args.site_list:
+        main()
+    else:
+        if "all" in args.site_list:
+            main(auth_folder=args.auth_folder)
+        else:
+            renew_comb(args.site_list, auth_folder=args.auth_folder)
+
+# if __name__ == "__main__":
+#     main()

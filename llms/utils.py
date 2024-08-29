@@ -27,6 +27,7 @@ APIInput = str | list[Any] | dict[str, Any]
 def call_llm(
     lm_config: lm_config.LMConfig,
     prompt: APIInput,
+    num_outputs: int = 1,
 ) -> str:
     response: str
     if lm_config.provider == "openai":
@@ -40,6 +41,7 @@ def call_llm(
                 context_length=lm_config.gen_config["context_length"],
                 max_tokens=lm_config.gen_config["max_tokens"],
                 stop_token=None,
+                num_outputs=num_outputs,
             )
         elif lm_config.mode == "completion":
             assert isinstance(prompt, str)

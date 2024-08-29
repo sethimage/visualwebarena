@@ -94,6 +94,7 @@ class ScriptBrowserEnv(Env[dict[str, Observation], Action]):
         sleep_after_execution: float = 0.0,
         captioning_fn=None,
     ):
+        print("Environment in visualwebarena")
         # TODO: make Space[Action] = ActionSpace
         self.action_space = get_action_space()  # type: ignore[assignment]
         self.headless = headless

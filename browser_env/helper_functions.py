@@ -4,6 +4,7 @@ import json
 import re
 from pathlib import Path
 from typing import Any
+import numpy as np
 
 from beartype import beartype
 from PIL import Image
@@ -188,6 +189,7 @@ class RenderHelper(object):
         state_info: StateInfo,
         meta_data: dict[str, Any],
         render_screenshot: bool = False,
+        additional_text: list[str] | None = None,
     ) -> None:
         """Render the trajectory"""
         # text observation
@@ -211,6 +213,16 @@ class RenderHelper(object):
 
         # meta data
         new_content += f"<div class='prev_action' style='background-color:pink'>{meta_data['action_history'][-1]}</div>\n"
+
+        # additional text
+        if additional_text:
+            for text_i, text in enumerate(additional_text):
+                # Alternate background color between light green and light blue
+                if text_i % 2 == 0:
+                    bg_color = "#87CEFA"
+                else:
+                    bg_color = "#98FB98"
+                new_content += f"<div class='additional_text' style='background-color: {bg_color}'>#{text_i+1}: {text}</div>\n"
 
         # action
         action_str = get_render_action(
@@ -236,3 +248,17 @@ class RenderHelper(object):
 
     def close(self) -> None:
         self.render_file.close()
+
+
+def save_img(
+    img_obs: np.ndarray, save_dir: str, task_id: int, step_idx: int, trail_idx: int = 0
+) -> None:
+    """Save the image observation as png file"""
+    if not Path(save_dir).exists():
+        Path(save_dir).mkdir(parents=True)
+    image = Image.fromarray(img_obs)
+    img_path = Path(save_dir) / f"{task_id}_{trail_idx}_{step_idx}.png"
+    image.save(img_path, format="PNG")
+
+    # to string
+    return str(img_path)

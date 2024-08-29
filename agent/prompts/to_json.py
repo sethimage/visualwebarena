@@ -10,10 +10,11 @@ def run() -> None:
 
     Python files are easiser to edit
     """
-    for p_file in glob.glob(f"agent/prompts/raw/*.py"):
+    for p_file in glob.glob(f"agent/prompts/jsons/*.py"):
         # import the file as a module
         base_name = os.path.basename(p_file).replace(".py", "")
-        module = importlib.import_module(f"agent.prompts.raw.{base_name}")
+        module = importlib.import_module(f"agent.prompts.jsons.{base_name}")
+        breakpoint()
         prompt = module.prompt
         # save the prompt as a json file
         os.makedirs("agent/prompts/jsons", exist_ok=True)
