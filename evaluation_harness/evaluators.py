@@ -483,6 +483,13 @@ class HTMLContentExactEvaluator(Evaluator):
                     f"Unknown required_contents: {target['required_contents'].keys()}"
                 )
 
+            if "not_exact_match" in target["required_contents"]:
+                required_contents = target["required_contents"]["not_exact_match"]
+                exact = StringEvaluator.exact_match(
+                    ref=required_contents, pred=selected_element
+                )
+                score *= (1 - exact)
+
         return score
 
 
