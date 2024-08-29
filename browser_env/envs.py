@@ -264,8 +264,8 @@ class ScriptBrowserEnv(Env[dict[str, Observation], Action]):
         if self.sleep_after_execution > 0:
             time.sleep(self.sleep_after_execution)
 
-        observation = self._get_obs(adv_url2caption, adv_url2image)
         observation_clean = self._get_obs(None, None)
+        observation = self._get_obs(adv_url2caption, adv_url2image)
         observation["clean_text"] = observation_clean["text"]
         observation_metadata = self._get_obs_metadata()
         info = {
@@ -311,8 +311,8 @@ class ScriptBrowserEnv(Env[dict[str, Observation], Action]):
         if self.sleep_after_execution > 0:
             time.sleep(self.sleep_after_execution)
 
-        observation = self._get_obs(adv_url2caption, adv_url2image)
         observation_clean = self._get_obs(None, None)
+        observation = self._get_obs(adv_url2caption, adv_url2image)
         observation["clean_text"] = observation_clean["text"]
         observation_metadata = self._get_obs_metadata()
 
