@@ -464,8 +464,6 @@ class HTMLContentExactEvaluator(Evaluator):
                                 for value in value_or
                             ]
                         )
-            print(target["required_contents"])
-            print("Here")
             if "fuzzy_match" in target["required_contents"]:
                 targets = target["required_contents"]["fuzzy_match"]
                 assert isinstance(targets, str)
@@ -480,7 +478,6 @@ class HTMLContentExactEvaluator(Evaluator):
                             )
                         ]
                     )
-                    print("Fuzzy match score: ", score)
             if "not_exact_match" in target["required_contents"]:
                 required_contents = target["required_contents"]["not_exact_match"]
                 exact = StringEvaluator.exact_match(

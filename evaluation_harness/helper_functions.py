@@ -583,7 +583,7 @@ def llm_fuzzy_match(pred: str, reference: str, question: str) -> float:
     """Check whether the prediction matches the reference with GPT-4-turbo"""
     messages: list[dict[str, Any]] = []
     # construct the question to ask
-    message = "Help a teacher to grade the answer of a student given a question. Keep in mind that the student may use different phrasing or wording to answer the question. The goal is to evaluate whether the answer is semantically equivalent to the reference answer. If the reference answer is a requirement, the goal is to evaluate whether the answer satisfies the requirement.\n"
+    message = "Help a teacher to grade the answer of a student given a question. Keep in mind that the student may use different phrasing or wording to answer the question. The student answer might have fuzzy format since it is extracted from an html; focus on the content. The goal is to evaluate whether the answer is semantically equivalent to the reference answer. If the reference answer is a requirement, the goal is to evaluate whether the answer satisfies the requirement.\n"
     message += f"question: {question}\n"
     message += f"reference answer: {reference}\n"
     message += "all the string 'N/A' that you see is a special sequence that means 'not achievable'\n"
