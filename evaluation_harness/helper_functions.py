@@ -596,7 +596,7 @@ def llm_fuzzy_match(pred: str, reference: str, question: str) -> float:
 
     print(message)
     response = generate_from_openai_chat_completion(
-        model="gpt-4-1106-preview",
+        model="gpt-4o-2024-05-13",
         messages=messages,
         temperature=0,
         max_tokens=768,
@@ -632,7 +632,7 @@ def llm_ua_match(pred: str, reference: str, question: str) -> float:
     ]
 
     response = generate_from_openai_chat_completion(
-        model="gpt-4-1106-preview",
+        model="gpt-4o-2024-05-13",
         messages=messages,
         temperature=0,
         max_tokens=768,
