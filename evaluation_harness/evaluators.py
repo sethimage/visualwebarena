@@ -419,7 +419,7 @@ class HTMLContentExactEvaluator(Evaluator):
                 score *= StringEvaluator.exact_match(
                     ref=required_contents, pred=selected_element
                 )
-            elif "must_include" in target["required_contents"]:
+            if "must_include" in target["required_contents"]:
                 required_contents = target["required_contents"]["must_include"]
                 assert isinstance(required_contents, list)
                 for content in required_contents:
@@ -432,7 +432,7 @@ class HTMLContentExactEvaluator(Evaluator):
                             for content in content_or
                         ]
                     )
-            elif "must_exclude" in target["required_contents"]:
+            if "must_exclude" in target["required_contents"]:
                 required_contents = target["required_contents"]["must_exclude"]
                 assert isinstance(required_contents, list)
                 for content in required_contents:
@@ -442,7 +442,7 @@ class HTMLContentExactEvaluator(Evaluator):
                     score *= StringEvaluator.must_exclude(
                         content, pred=selected_element
                     )
-            elif "required_values" in target["required_contents"]:
+            if "required_values" in target["required_contents"]:
                 required_values = target["required_contents"][
                     "required_values"
                 ]
@@ -464,25 +464,23 @@ class HTMLContentExactEvaluator(Evaluator):
                                 for value in value_or
                             ]
                         )
-            elif "fuzzy_match" in target["required_contents"]:
+            print(target["required_contents"])
+            print("Here")
+            if "fuzzy_match" in target["required_contents"]:
                 targets = target["required_contents"]["fuzzy_match"]
                 assert isinstance(targets, str)
                 targets = targets.split(" |OR| ")
-                for target in targets:
+                for _target in targets:
                     score *= max(
                         [
                             StringEvaluator.fuzzy_match(
-                                ref=target,
+                                ref=_target,
                                 pred=selected_element,
                                 intent="NOT USED",
                             )
                         ]
                     )
-            else:
-                raise ValueError(
-                    f"Unknown required_contents: {target['required_contents'].keys()}"
-                )
-
+                    print("Fuzzy match score: ", score)
             if "not_exact_match" in target["required_contents"]:
                 required_contents = target["required_contents"]["not_exact_match"]
                 exact = StringEvaluator.exact_match(
