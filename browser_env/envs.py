@@ -267,6 +267,7 @@ class ScriptBrowserEnv(Env[dict[str, Observation], Action]):
         observation_clean = self._get_obs(None, None)
         observation = self._get_obs(adv_url2caption, adv_url2image)
         observation["clean_text"] = observation_clean["text"]
+        observation["clean_image"] = observation_clean["image"]
         observation_metadata = self._get_obs_metadata()
         info = {
             "page": DetachedPage(self.page.url, ""),
@@ -314,6 +315,7 @@ class ScriptBrowserEnv(Env[dict[str, Observation], Action]):
         observation_clean = self._get_obs(None, None)
         observation = self._get_obs(adv_url2caption, adv_url2image)
         observation["clean_text"] = observation_clean["text"]
+        observation["clean_image"] = observation_clean["image"]
         observation_metadata = self._get_obs_metadata()
 
         info = {
