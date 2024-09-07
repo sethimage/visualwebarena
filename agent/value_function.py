@@ -15,7 +15,7 @@ client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
 def evaluate_success(screenshots: list[Image.Image], actions: list[str], current_url: str, last_reasoning: str,
                      intent: str, models: list[str], intent_images: Optional[Image.Image] = None,
-                     n: int = 20, top_p: float = 1.0, should_log: bool = False) -> float:
+                     n: int = 20, top_p: float = 1.0, should_log: bool = False, obs_texts = None) -> float:
     """Compute the value of a state using the value function.
 
     Args:
@@ -67,14 +67,31 @@ The last {len(screenshots)} snapshots of the agent's trajectory are shown in the
             "text": f"\nUser Intent: {intent}\n"
         })
 
-        for screenshot in screenshots:
-            content.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": pil_to_b64(screenshot),
-                    "detail": "high"
-                },
-            })
+        if obs_texts:
+            assert len(obs_texts) == len(screenshots)
+            for obs_text, screenshot in zip(obs_texts, screenshots):
+                content.append({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": pil_to_b64(screenshot),
+                        "detail": "high"
+                    },
+                })
+                content.append(
+                        {
+                        "type": "text",
+                        "text": obs_text,
+                    }
+                )
+        else:
+            for screenshot in screenshots:
+                content.append({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": pil_to_b64(screenshot),
+                        "detail": "high"
+                    },
+                })
 
         content.append({
             "type": "text",
@@ -84,7 +101,7 @@ Bot response to the user: {last_response}
 Current URL: {current_url}
 The images corresponding to the user intent are shown in the FIRST {len(intent_images)} images (before the User Intent).
 The last {len(screenshots)} snapshots of the agent's trajectory are shown in the LAST {len(screenshots)} images. The LAST IMAGE represents the current state of the webpage.
-"""
+""" + "After each snapshot, we also provide the text transcription of it." if obs_texts else ""
         })
 
     messages = [

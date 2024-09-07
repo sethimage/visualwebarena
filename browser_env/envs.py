@@ -264,7 +264,7 @@ class ScriptBrowserEnv(Env[dict[str, Observation], Action]):
         if self.sleep_after_execution > 0:
             time.sleep(self.sleep_after_execution)
 
-        observation_clean = self._get_obs(None, None)
+        observation_clean = self._get_obs(None, None)  # TODO: improve
         observation = self._get_obs(adv_url2caption, adv_url2image)
         observation["clean_text"] = observation_clean["text"]
         observation["clean_image"] = observation_clean["image"]
@@ -289,7 +289,7 @@ class ScriptBrowserEnv(Env[dict[str, Observation], Action]):
 
     def step(
         self, action: Action, 
-        adv_url2caption=None, 
+        adv_url2caption=None,
         adv_url2image=None
     ) -> tuple[dict[str, Observation], float, bool, bool, dict[str, Any]]:
         if not self.reset_finished:
@@ -312,7 +312,7 @@ class ScriptBrowserEnv(Env[dict[str, Observation], Action]):
         if self.sleep_after_execution > 0:
             time.sleep(self.sleep_after_execution)
 
-        observation_clean = self._get_obs(None, None)
+        observation_clean = self._get_obs(None, None)  # TODO: improve
         observation = self._get_obs(adv_url2caption, adv_url2image)
         observation["clean_text"] = observation_clean["text"]
         observation["clean_image"] = observation_clean["image"]

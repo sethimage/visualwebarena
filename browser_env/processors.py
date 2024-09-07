@@ -701,9 +701,15 @@ class TextObervationProcessor(ObservationProcessor):
                                 updated_alt = f"{updated_alt}, url: {image_url}"
                             
                             # Update adversarial caption
-                            if adv_url2caption is not None and image_url in adv_url2caption:
-                                adv_caption = adv_url2caption[image_url]
-                                updated_alt = re.sub(r"description: (.+?), url", f"description: {adv_caption}, url", updated_alt)
+                            if adv_url2caption is not None:
+                                if image_url in adv_url2caption:
+                                    adv_caption = adv_url2caption[image_url]
+                                    updated_alt = re.sub(r"description: (.+?), url", f"description: {adv_caption}, url", updated_alt)
+                            else:
+                                if image_url in self.url2caption:
+                                    # breakpoint()
+                                    clean_caption = self.url2caption[image_url]
+                                    updated_alt = re.sub(r"description: (.+?), url", f"description: {clean_caption}, url", updated_alt)
 
                             safe_updated_alt = json.dumps(updated_alt)
                             image.evaluate(
