@@ -103,7 +103,7 @@ class Evaluator:
         for idx, act in enumerate(info["actions"]):
             action_history += f"{idx+1}: {act}\n"
         prompt, sys_msg = build_final_eval_v3_final_prompt_gpt4v(
-            info["intent"], info["response"], action_history
+            info["intent"], info["response"], action_history, last_acc_tree=info["steps"][-1]["accessibility_tree"]
         )
         img = info["images"][-1]
         

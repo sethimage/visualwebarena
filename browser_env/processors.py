@@ -594,7 +594,7 @@ class TextObervationProcessor(ObservationProcessor):
         elif self.observation_type in [
             "accessibility_tree_with_captioner",
             "image_som",
-        ]:
+        ]:            
             # Check if the current page is an image url
             if page.url.endswith((".jpg", ".jpeg", ".png")):
                 print("NOTE: We are on an image page!!!")
@@ -729,6 +729,33 @@ class TextObervationProcessor(ObservationProcessor):
                             print("L653 WARNING:", e)
                 
                 else:
+                    # breakpoint()
+                    
+                    # Update adversarial caption
+                    if adv_url2caption is not None:
+                        images = page.query_selector_all("img")
+                        for image in images:
+                            try:
+                                original_alt = image.get_attribute("alt") or ""
+
+                                updated_alt = original_alt
+                                image_url = image.get_attribute("src")
+                                if not image_url.startswith(
+                                    ("http://", "https://", "www.")
+                                ):
+                                    image_url = urljoin(page.url, image_url)
+                                if image_url in adv_url2caption:
+                                    adv_caption = adv_url2caption[image_url]
+                                    if adv_caption not in updated_alt:
+                                        if ", description:" not in updated_alt:
+                                            updated_alt = f"{updated_alt}, description: {adv_caption}"
+                                safe_updated_alt = json.dumps(updated_alt)
+                                image.evaluate(
+                                    f"node => node.alt = {safe_updated_alt}"
+                                )
+                            except Exception as e:
+                                print("L604 WARNING: ", e)
+
                     # Update adversarial image
                     if adv_url2image is not None:
                         images = page.query_selector_all("img")

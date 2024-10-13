@@ -10,7 +10,7 @@ import time
 # from agent_eval.clients import LM_Client, GPT4V_Client
 # from agent_eval.eval.evaluator import Evaluator
 
-from agent.agent_eval import LM_Client, GPT4V_Client
+from agent.agent_eval import LM_Client, GPT4V_Client, GPT4O_Client
 from agent.evaluator_other import Evaluator
 
 import multiprocessing as mp
@@ -39,7 +39,8 @@ class GUIAgentEvaluator:
             "gpt-3.5": LM_Client(api_key=OAI_KEY, model_name="gpt-3.5"),
             "gpt-4": LM_Client(api_key=OAI_KEY, model_name="gpt-4"),
             "mixtral": LM_Client(api_key="<removed>", model_name="mixtral"),
-            "gpt-4v": GPT4V_Client(api_key=OAI_KEY),
+            "gpt-4v": GPT4O_Client(api_key=OAI_KEY),
+            # "gpt-4o": GPT4O_Client(api_key=OAI_KEY),
         }
         self.evaluator = Evaluator(self.lm_clients, log_save_path=result_path)
 
@@ -89,7 +90,7 @@ class GUIAgentEvaluator:
                     records["images"].append(np.array(img))
 
         out, _ = self.evaluator(records, self.model_type, self.prompt_version)
-        print(out)
+        # print(out)
         # breakpoint()
         if "success" in out["status"]:
             # return 0, "FAILED"

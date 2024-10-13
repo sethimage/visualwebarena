@@ -31,23 +31,48 @@ def evaluate_success(screenshots: list[Image.Image], actions: list[str], current
     last_response = actions[-1]
     if intent_images is None:
         content = []
-        for screenshot in screenshots:
-            content.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": pil_to_b64(screenshot),
-                    "detail": "high"
-                },
-            })
+        
+        content.append({
+            "type": "text",
+            "text": f"\nUser Intent: {intent}\n"
+        })
+
+
+        if obs_texts:
+            assert len(obs_texts) == len(screenshots)
+            for obs_text, screenshot in zip(obs_texts, screenshots):
+                content.append({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": pil_to_b64(screenshot),
+                        "detail": "high"
+                    },
+                })
+                content.append(
+                        {
+                        "type": "text",
+                        "text": obs_text,
+                    }
+                )
+        else:
+            for screenshot in screenshots:
+                content.append({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": pil_to_b64(screenshot),
+                        "detail": "high"
+                    },
+                })
+
 
         content.append({
             "type": "text",
-            "text": f"""User Intent: {intent}
+            "text": f"""
 Action History: {last_actions_str}
 Bot response to the user: {last_response}
 Current URL: {current_url}
-The last {len(screenshots)} snapshots of the agent's trajectory are shown in the {len(screenshots)} images. The LAST IMAGE represents the current state of the webpage.
-"""
+The last {len(screenshots)} snapshots of the agent's trajectory are shown in the LAST {len(screenshots)} images. The LAST IMAGE represents the current state of the webpage.
+""" + "After each snapshot, we also provide the text transcription of it." if obs_texts else ""
         })
 
     else:
@@ -114,6 +139,8 @@ There are three types of tasks:
 1. Information seeking: The user wants to obtain certain information from the webpage, such as the information of a product, reviews, the text in a comment or post, the date of a submission, etc. This may be formulated in the intent as "tell me", "what is", or "list out". The agent's response must contain the information the user wants, or explicitly state that the information is not available. Otherwise, e.g. the agent encounters an exception and respond with the error content, the task is considered to be a failure. It is VERY IMPORTANT that the bot response is the stop action with the correct output. If the bot response is not stop (e.g., it is click, type, or goto), it is considered a failure for information seeking tasks.
 2. Site navigation: The user wants to navigate to a specific page (which may also be specified in the intent as "find", "show me", "navigate to"). Carefully examine the agent's action history and the final state of the webpage (shown in the LAST IMAGE) to determine whether the agent successfully completes the task. It is VERY IMPORTANT that the agent actually navigates to the specified page (reflected by the final state of the webpage, in the LAST IMAGE) and NOT just output the name of the item or post. Make sure that the final url is compatible with the task. For example, if you are tasked to navigate to a comment or an item, the final page and url should be that of the specific comment/item and not the overall post or search page. If asked to navigate to a page with a similar image, make sure that an image on the page is semantically SIMILAR to the intent image. If asked to look for a particular post or item, make sure that the image on the page is EXACTLY the intent image. For this type of task to be considered successful, the LAST IMAGE and current URL should reflect the correct content. No need to consider the agent's response.
 3. Content modification: The user wants to modify the content of a webpage or configuration. Ensure that the agent actually commits to the modification. For example, if the agent writes a review or a comment but does not click post, the task is considered to be a failure. Carefully examine the agent's action history and the final state of the webpage to determine whether the agent successfully completes the task. No need to consider the agent's response.
+
+Note: One may need to click an option before adding products to cart.
 
 *IMPORTANT*
 Format your response into two lines as shown below:

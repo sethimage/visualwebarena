@@ -280,6 +280,106 @@ class GPT4V_Client:
             }
         ]
         return self.chat(messages, json_mode=json_mode)
+    
+
+class GPT4O_Client:
+    def __init__(self, api_key, model_name="gpt-4o", max_tokens=512):
+        self.api_key = api_key
+        # self.client = OpenAI(api_key=api_key)
+        self.model_name = model_name
+        self.max_tokens = max_tokens
+
+    def chat(self, messages, json_mode=False) -> Tuple[str, ChatCompletion]:
+        return query_openai_api(messages, self.model_name, api_key=self.api_key)
+
+    def one_step_chat(
+        self, text, image: Union[Image.Image, np.ndarray], system_msg: Optional[str] = None, json_mode=False
+    ) -> Tuple[str, ChatCompletion]:
+        jpeg_buffer = BytesIO()
+
+        # Save the image as JPEG to the buffer
+        if isinstance(image, np.ndarray):
+            image = Image.fromarray(image)
+        image = image.convert("RGB")
+        image.save(jpeg_buffer, format="JPEG")
+
+        # Get the byte data from the buffer
+        jpeg_data = jpeg_buffer.getvalue()
+
+        # Encode the JPEG image data in base64
+        jpg_base64 = base64.b64encode(jpeg_data)
+
+        # If you need it in string format
+        jpg_base64_str = jpg_base64.decode("utf-8")
+        messages = []
+        if system_msg is not None:
+            messages.append({"role": "system", "content": system_msg})
+        messages += [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": text},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{jpg_base64_str}"
+                        },
+                    },
+                ],
+            }
+        ]
+        return self.chat(messages, json_mode=json_mode)
+
+    def one_step_multi_image_chat(
+        self, text, images: list[Union[Image.Image, np.ndarray]], system_msg: Optional[str] = None, json_mode=False
+    ) -> Tuple[str, ChatCompletion]:
+        """
+        images: [{"image": PIL.image, "detail": "high" or "low }]
+
+        For low res mode, we expect a 512px x 512px image. For high res mode, the short side of the image should be less than 768px and the long side should be less than 2,000px.
+        """
+        details = [i["detail"] for i in images]
+        img_strs = []
+        for img_info in images:
+            image = img_info["image"]
+            jpeg_buffer = BytesIO()
+
+            # Save the image as JPEG to the buffer
+            if isinstance(image, np.ndarray):
+                image = Image.fromarray(image)
+            image = image.convert("RGB")
+            image.save(jpeg_buffer, format="JPEG")
+
+            # Get the byte data from the buffer
+            jpeg_data = jpeg_buffer.getvalue()
+
+            # Encode the JPEG image data in base64
+            jpg_base64 = base64.b64encode(jpeg_data)
+
+            # If you need it in string format
+            jpg_base64_str = jpg_base64.decode("utf-8")
+            img_strs.append(f"data:image/jpeg;base64,{jpg_base64_str}")
+        messages = []
+        if system_msg is not None:
+            messages.append({"role": "system", "content": system_msg})
+
+        img_sub_msg = [
+            {
+                "type": "image_url",
+                "image_url": {"url": img_str, "detail": detail},
+            }
+            for img_str, detail in zip(img_strs, details)
+        ]
+        messages += [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": text},
+                ]
+                + img_sub_msg,
+            }
+        ]
+        return self.chat(messages, json_mode=json_mode)
 
 
 # class BatchGPT4V:

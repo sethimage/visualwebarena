@@ -398,9 +398,11 @@ def build_final_eval_v3_final_prompt(
     system_msg = """You are an expert in evaluating the performance of a web navigation agent. The agent is designed to help a human user navigate a website to complete a task. Given the user's intent, the agent's action history, the final state of the webpage, and the agent's response to the user, your goal is to decide whether the agent's execution is successful or not.
 
 There are three types of tasks:
-1. Information seeking: The user wants to obtain certain information from the webpage, such as the information of a product, reviews, map info, comparison of map routes, etc. The bot's response must contain the information the user wants, or explicitly state that the information is not available. Otherwise, e.g. the bot encounters an exception and respond with the error content, the task is considered a failure. Besides, be careful about the sufficiency of the agent's actions. For example, when asked to list the top-searched items in a shop, the agent should order the items by the number of searches, and then return the top items. If the ordering action is missing, the task is likely to fail.
+1. Information seeking: The user wants to obtain certain information from the webpage, such as the information of a product, reviews, map info, comparison of map routes, etc. The bot's response must contain the information the user wants, or explicitly state that the information is not available. Otherwise, e.g. the bot encounters an exception and respond with the error content, the task is considered a failure.
 2. Site navigation: The user wants to navigate to a specific page. Carefully examine the bot's action history and the final state of the webpage to determine whether the bot successfully completes the task. No need to consider the bot's response.
 3. Content modification: The user wants to modify the content of a webpage or configuration. Carefully examine the bot's action history and the final state of the webpage to determine whether the bot successfully completes the task. No need to consider the bot's response.
+
+Note: Do not reject the task simply because there are things you cannot verify. Focus on the information you have. For example, if the user ask about "cheapest", "most recent" items, you don't need to reject the actions simply because the agent did not do sorting or you cannot see previous pages. No need to go back or scroll to see things that are in the subsequent screen. Evaluate based on things you can verify with the observation shown to you!
 
 *IMPORTANT*
 Format your response into two lines as shown below:
@@ -424,14 +426,16 @@ Bot response to the user: {response if response else "N/A"}."""
 
 
 def build_final_eval_v3_final_prompt_gpt4v(
-    intent, response, last_actions
+    intent, response, last_actions, last_acc_tree=None
 ) -> tuple[str, str]:
     system_msg = """You are an expert in evaluating the performance of a web navigation agent. The agent is designed to help a human user navigate a website to complete a task. Given the user's intent, the agent's action history, the final state of the webpage, and the agent's response to the user, your goal is to decide whether the agent's execution is successful or not.
 
 There are three types of tasks:
-1. Information seeking: The user wants to obtain certain information from the webpage, such as the information of a product, reviews, map info, comparison of map routes, etc. The bot's response must contain the information the user wants, or explicitly state that the information is not available. Otherwise, e.g. the bot encounters an exception and respond with the error content, the task is considered a failure. Besides, be careful about the sufficiency of the agent's actions. For example, when asked to list the top-searched items in a shop, the agent should order the items by the number of searches, and then return the top items. If the ordering action is missing, the task is likely to fail.
+1. Information seeking: The user wants to obtain certain information from the webpage, such as the information of a product, reviews, map info, comparison of map routes, etc. The bot's response must contain the information the user wants, or explicitly state that the information is not available. Otherwise, e.g. the bot encounters an exception and respond with the error content, the task is considered a failure.
 2. Site navigation: The user wants to navigate to a specific page. Carefully examine the bot's action history and the final state of the webpage to determine whether the bot successfully completes the task. No need to consider the bot's response.
 3. Content modification: The user wants to modify the content of a webpage or configuration. Carefully examine the bot's action history and the final state of the webpage to determine whether the bot successfully completes the task. No need to consider the bot's response.
+
+Note: Do not reject the task simply because there are things you cannot verify. Focus on the information you have. For example, if the user ask about "cheapest", "most recent" items, you don't need to reject the actions simply because the agent did not do sorting or you cannot see previous pages. No need to go back or scroll to see things that are in the subsequent screen. Evaluate based on things you can verify with the observation shown to you!
 
 *IMPORTANT*
 Format your response into two lines as shown below:
@@ -445,6 +449,9 @@ Action History:
 {last_actions}
 
 The last snapshot of the web page is shown in the image."""
+
+    if last_acc_tree is not None:
+        prompt = prompt + f"\nThe Here is parsed text representation of the last snapshot:\n{last_acc_tree}"
     return prompt, system_msg
 
 
