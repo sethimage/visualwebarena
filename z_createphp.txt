@@ -1,0 +1,11 @@
+mkdir -p VendorName/ProductTimer/etc
+mkdir -p VendorName/ProductTimer/view/frontend/layout
+mkdir -p VendorName/ProductTimer/view/frontend/templates
+mkdir -p VendorName/ProductTimer/view/frontend/web/js
+mkdir -p VendorName/ProductTimer/view/frontend/web/css
+
+
+# Run these commands in the root of your module
+php bin/magento module:enable VendorName_ProductTimer
+php bin/magento setup:upgrade
+php bin/magento setup:static-content:deploy -f

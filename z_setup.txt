@@ -1,0 +1,101 @@
+conda create -n webarena python=3.11
+conda activate webarena
+pip install -r requirements.txt
+playwright install
+pip install -e .
+
+# Install flask
+pip install flask
+
+# Ensure transformers and tokensizers are installed with the correct version
+pip install --upgrade transformers tokenizers
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+pip install openai == 1.68.0
+
+
+# Index.php
+6e98c3816b68021168b644cc9cc8f9fdb7a393672703d48a766e297f9e51796e
+
+# Magento2
+ed902127ef1af3ca6a21748af76667bbc3a1f57463f8632be3954fb2afa5ff48
+f4a095d1987186feb08ec6763d5061c6330284a445391a2859e001060e045738
+
+# Load resources
+sudo docker load --input shopping_final_0712.tar
+
+# Repeat every time restart needed
+sudo docker run --name shopping -p 7770:80 -d shopping_final_0712
+sudo docker exec shopping /var/www/magento2/bin/magento setup:store-config:set --base-url="http://0.0.0.0:7770" # no trailing slash
+
+# Reset password
+php bin/magento admin:user:create
+
+sudo docker exec shopping mysql -u magentouser -ppassword magentodb -e  'UPDATE core_config_data SET value="http://0.0.0.0:7770/" WHERE path = "web/secure/base_url";'
+sudo docker exec shopping /var/www/magento2/bin/magento cache:flush
+
+
+# Reload env:
+php bin/magento setup:upgrade
+php bin/magento setup:static-content:deploy -f
+php bin/magento cache:flush
+
+gcloud config set project hai-gcp-accents-dialects
+gcloud auth application-default login
+
+#################
+# Run evals (URL needs to be localhost )
+export DATASET=visualwebarena
+export SHOPPING="localhost:7770"
+export HOMEPAGE="localhost:4399"
+
+
+
+
+
+
+
+
+
+
+
+# Reset env:
+bash reset_shopping.sh
+curl -X POST http://0.0.0.0:9980/index.php?page=reset -d "token=4b61655535e7ed388f0d40a93600254c
+
+
+
+# Kill docker scripts:
+sudo docker kill shopping
+sudo docker rm shopping
+
+# Remove image:
+sudo docker rmi shopping_final_0712
+
+# Explore image interactively:
+sudo docker run -it --rm shopping_final_0712 /bin/bash
+
+# Explore container interactively:
+Connect using VSCode Dev Container extension
+Right click on the container and select "Attach Shell"
+
+Composer files in /var/www/magento2/vendor/magento (do not edit)
+Actual files in /var/www/magento2/app/code/ (you can edit)
+
+# Copy file from ~/Downloads/ to container tmp dir:
+sudo docker cp ~/Downloads/openssh-server-9.0_p1-r5.apk shopping:/tmp/
+
+
+# Get SKUs:
+cd /var/www/magento2 && php -r '
+require "app/bootstrap.php";
+$bootstrap = \Magento\Framework\App\Bootstrap::create(BP, $_SERVER);
+$objectManager = $bootstrap->getObjectManager();
+$productRepository = $objectManager->create(\Magento\Catalog\Api\ProductRepositoryInterface::class);
+$searchCriteriaBuilder = $objectManager->create(\Magento\Framework\Api\SearchCriteriaBuilder::class);
+$searchCriteria = $searchCriteriaBuilder->setPageSize(10)->setCurrentPage(1)->create();
+$products = $productRepository->getList($searchCriteria);
+echo "First 10 Product SKUs:\n";
+foreach ($products->getItems() as $product) {
+    echo $product->getSku() . "\n";
+}
+'
